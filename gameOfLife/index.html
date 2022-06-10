@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<meta charset="UTF-8">
+<html lang="en" xml:lang="en">
+
+<head>
+    <title>Game of life</title>
+    <meta name="title" content="Game of Life">
+    <meta name="description" content="A Game of Life implementation in typescript">
+    <meta name="keywords" content="game, life, html5, canvas, typescript">
+    <meta name="robots" content="index, follow">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="language" content="English">
+    <script defer src="bundle.js"></script>
+    <link href="style.css" rel="stylesheet">
+</head>
+
+<body>
+    <button type="button" id="_nothing" disabled>_</button>
+    <button type="button" id="startStopButton" disabled>start/stop (w)</button>
+    <button type="button" id="evolveButton">Evolve (e)</button>
+    <button type="button" id="ribbonButton">Ribbon (r)</button>
+    <button type="button" id="trussButton">Truss (t)</button>
+    <br>
+
+    <button type="button" id="cellAgeButton">Age (a)</button>
+    <button type="button" id="smoothButton">Smooth (s)</button>
+    <button type="button" id="circularButton">Circular (d)</button>
+    <button type="button" id="moleculeButton">Molecule (f)</button>
+    <br>
+
+    <button type="button" id="niente" disabled>_</button>
+    <button type="button" id="killAllButton">Clear (x)</button>
+    <button type="button" id="classicButton">Classic (c)</button>
+    <button type="button" id="neigbourcountButton">Neighbours (v)</button>
+    <br>
+
+    <canvas id="myCanvas" width="1200" height="1100"></canvas><br><br>
+    Check out source code at <a href="https://github.com/kemlo77/game-of-life">github</a>.
+</body>
+
+</html>
