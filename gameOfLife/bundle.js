@@ -102,6 +102,32 @@ class Cell {
 
 /***/ }),
 
+/***/ "./src/model/cellconnection.ts":
+/*!*************************************!*\
+  !*** ./src/model/cellconnection.ts ***!
+  \*************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "CellConnection": () => (/* binding */ CellConnection)
+/* harmony export */ });
+class CellConnection {
+    constructor(cell1, cell2) {
+        this._cell1 = cell1;
+        this._cell2 = cell2;
+    }
+    get cell1() {
+        return this._cell1;
+    }
+    get cell2() {
+        return this._cell2;
+    }
+}
+
+
+/***/ }),
+
 /***/ "./src/model/grid.ts":
 /*!***************************!*\
   !*** ./src/model/grid.ts ***!
@@ -128,17 +154,16 @@ class Grid {
     cellAt(x, y) {
         return this._grid[y][x];
     }
-    allCells() {
+    get allCells() {
         return this._grid.flat();
     }
-    //TODO: fundera över att använda en getter istället
-    allLiveCells() {
-        return this.allCells().filter(cell => cell.isAlive);
+    get allLiveCells() {
+        return this.allCells.filter(cell => cell.isAlive);
     }
     get clusters() {
         const clusterArray = [];
         const alreadyChecked = new Set();
-        for (const livingCell of this.allLiveCells()) {
+        for (const livingCell of this.allLiveCells) {
             if (alreadyChecked.has(livingCell)) {
                 continue;
             }
@@ -171,8 +196,8 @@ class Grid {
         return columnOfRows;
     }
     connectCellsWithNeighbours() {
-        this.allCells().forEach(currentCell => {
-            this.allCells()
+        this.allCells.forEach(currentCell => {
+            this.allCells
                 .filter(cell => cell !== currentCell)
                 .filter(cell => Math.abs(currentCell.columnIndex - cell.columnIndex) <= 1)
                 .filter(cell => Math.abs(currentCell.rowIndex - cell.rowIndex) <= 1)
@@ -180,11 +205,11 @@ class Grid {
         });
     }
     evolve() {
-        this.allCells().forEach(cell => cell.planFate());
-        this.allCells().forEach(cell => cell.executeFate());
+        this.allCells.forEach(cell => cell.planFate());
+        this.allCells.forEach(cell => cell.executeFate());
     }
     killAll() {
-        this.allCells().forEach(cell => cell.die());
+        this.allCells.forEach(cell => cell.die());
     }
 }
 
@@ -205,30 +230,30 @@ __webpack_require__.r(__webpack_exports__);
 
 class CanvasPainter {
     constructor() {
+        this.canvasElement = document.getElementById('myCanvas');
+        this.canvasCtx = this.canvasElement.getContext('2d');
         this.white = 'rgba(255,255,255,1)';
         this.black = 'rgba(0,0,0,1)';
         this.green = 'rgba(0,255,0,1)';
         this.gray = 'rgba(128,128,128,1)';
-        this.canvasElement = document.getElementById('myCanvas');
-        this.canvasCtx = this.canvasElement.getContext('2d');
+        this.orange = 'rgba(255,127,0,1)';
+        this.yellow = 'rgba(255,255,0,1)';
+        this.lightBlue = 'rgba(100,100,255,1)';
         this.gridCellWidth = 20;
+    }
+    get thinLineWidth() {
+        return this.gridCellWidth * 0.1;
+    }
+    get mediumLineWidth() {
+        return this.gridCellWidth * 0.5;
+    }
+    get wideLineWidth() {
+        return this.gridCellWidth;
     }
     clearTheCanvas() {
         this.canvasCtx.clearRect(0, 0, this.canvasElement.width, this.canvasElement.height);
     }
-    paintWideLineBetweenCells(cell1, cell2) {
-        this.paintLineBetweenCells(cell1, cell2, this.gridCellWidth, this.black, false);
-    }
-    paintMediumGreenLineBetweenCells(cell1, cell2) {
-        this.paintLineBetweenCells(cell1, cell2, this.gridCellWidth * 0.6, this.green, false);
-    }
-    paintMediumShadowLineBetweenCells(cell1, cell2) {
-        this.paintLineBetweenCells(cell1, cell2, this.gridCellWidth * 0.6, this.gray, true);
-    }
-    paintThinLineBetweenCells(cell1, cell2) {
-        this.paintLineBetweenCells(cell1, cell2, 2.5, this.black, false);
-    }
-    paintLineBetweenCells(cell1, cell2, width, color, offset) {
+    paintLineBetweenCells(cell1, cell2, width = this.thinLineWidth, color = this.black, offset = false) {
         let shadowOffset = 0;
         if (offset) {
             shadowOffset = this.gridCellWidth * 0.1;
@@ -243,28 +268,16 @@ class CanvasPainter {
         this.canvasCtx.lineTo(centerOfCell2.x + shadowOffset, centerOfCell2.y + shadowOffset);
         this.canvasCtx.stroke();
     }
-    paintCellsAsHollowDots(cells, outerColor, innerColor) {
-        this.paintCircles(cells, outerColor, this.gridCellWidth * 0.32, false);
-        this.paintCircles(cells, innerColor, this.gridCellWidth * 0.2, false);
+    paintCellsAsHollowDots(cells, innerColor) {
+        this.paintCircles(cells, this.black, this.gridCellWidth * 0.64, false);
+        this.paintCircles(cells, innerColor, this.gridCellWidth * 0.4, false);
     }
-    paintCellsAsSmallHollowDots(cells, outerColor, innerColor) {
-        this.paintCircles(cells, outerColor, this.gridCellWidth * 0.25, false);
-        this.paintCircles(cells, innerColor, this.gridCellWidth * 0.05, false);
-    }
-    paintWhiteCircle(cell) { this.paintWhiteCircles([cell]); }
-    paintBlackCircle(cell) { this.paintBlackCircles([cell]); }
-    paintWhiteCircles(cells) {
-        this.paintCircles(cells, this.white, this.gridCellWidth * 0.5, false);
-    }
-    paintBlackCircles(cells) {
-        this.paintCircles(cells, this.black, this.gridCellWidth * 0.5, false);
-    }
-    paintCircles(cells, color, width, offset) {
+    paintCircles(cells, color, diameter = this.gridCellWidth, offset = false) {
         let shadowOffset = 0;
         if (offset) {
             shadowOffset = this.gridCellWidth * 0.1;
         }
-        const radius = width;
+        const radius = diameter / 2;
         this.canvasCtx.fillStyle = color;
         cells.forEach(cell => {
             const center = this.centerOfCell(cell);
@@ -314,7 +327,7 @@ __webpack_require__.r(__webpack_exports__);
 
 class CellAgePainter extends _canvaspainter__WEBPACK_IMPORTED_MODULE_0__.CanvasPainter {
     plotCells(grid) {
-        grid.allLiveCells().forEach(cell => {
+        grid.allLiveCells.forEach(cell => {
             this.paintSquares([cell], this.colorGivenTheAgeOfCell(cell));
         });
     }
@@ -349,12 +362,10 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _cellagepainter__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./cellagepainter */ "./src/view/cellpainters/cellagepainter.ts");
 /* harmony import */ var _circularcellpainter__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./circularcellpainter */ "./src/view/cellpainters/circularcellpainter.ts");
 /* harmony import */ var _classiccellpainter__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./classiccellpainter */ "./src/view/cellpainters/classiccellpainter.ts");
-/* harmony import */ var _trusspainter__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./trusspainter */ "./src/view/cellpainters/trusspainter.ts");
-/* harmony import */ var _moleculepainter__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./moleculepainter */ "./src/view/cellpainters/moleculepainter.ts");
-/* harmony import */ var _ribbonpainter__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./ribbonpainter */ "./src/view/cellpainters/ribbonpainter.ts");
-/* harmony import */ var _neighbourcountpainter__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./neighbourcountpainter */ "./src/view/cellpainters/neighbourcountpainter.ts");
-/* harmony import */ var _smoothpainter__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./smoothpainter */ "./src/view/cellpainters/smoothpainter.ts");
-
+/* harmony import */ var _moleculepainter__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./moleculepainter */ "./src/view/cellpainters/moleculepainter.ts");
+/* harmony import */ var _ribbonpainter__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./ribbonpainter */ "./src/view/cellpainters/ribbonpainter.ts");
+/* harmony import */ var _neighbourcountpainter__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./neighbourcountpainter */ "./src/view/cellpainters/neighbourcountpainter.ts");
+/* harmony import */ var _smoothpainter__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./smoothpainter */ "./src/view/cellpainters/smoothpainter.ts");
 
 
 
@@ -367,12 +378,11 @@ class CellPainterProvider {
     static getCellPainter(painterType) {
         switch (painterType) {
             case 'circular': return new _circularcellpainter__WEBPACK_IMPORTED_MODULE_1__.CircularCellPainter();
-            case 'smooth': return new _smoothpainter__WEBPACK_IMPORTED_MODULE_7__.SmoothCellPainter();
+            case 'smooth': return new _smoothpainter__WEBPACK_IMPORTED_MODULE_6__.SmoothCellPainter();
             case 'age': return new _cellagepainter__WEBPACK_IMPORTED_MODULE_0__.CellAgePainter();
-            case 'neighbours': return new _neighbourcountpainter__WEBPACK_IMPORTED_MODULE_6__.NeighboursCountPainter();
-            case 'truss': return new _trusspainter__WEBPACK_IMPORTED_MODULE_3__.TrussPainter();
-            case 'ribbon': return new _ribbonpainter__WEBPACK_IMPORTED_MODULE_5__.RibbonPainter();
-            case 'molecule': return new _moleculepainter__WEBPACK_IMPORTED_MODULE_4__.MoleculePainter();
+            case 'neighbours': return new _neighbourcountpainter__WEBPACK_IMPORTED_MODULE_5__.NeighboursCountPainter();
+            case 'ribbon': return new _ribbonpainter__WEBPACK_IMPORTED_MODULE_4__.RibbonPainter();
+            case 'molecule': return new _moleculepainter__WEBPACK_IMPORTED_MODULE_3__.MoleculePainter();
             default: return new _classiccellpainter__WEBPACK_IMPORTED_MODULE_2__.ClassicCellPainter();
         }
     }
@@ -395,7 +405,7 @@ __webpack_require__.r(__webpack_exports__);
 
 class CircularCellPainter extends _canvaspainter__WEBPACK_IMPORTED_MODULE_0__.CanvasPainter {
     plotCells(grid) {
-        this.paintBlackCircles(grid.allLiveCells());
+        this.paintCircles(grid.allLiveCells, this.black);
     }
 }
 
@@ -416,7 +426,7 @@ __webpack_require__.r(__webpack_exports__);
 
 class ClassicCellPainter extends _canvaspainter__WEBPACK_IMPORTED_MODULE_0__.CanvasPainter {
     plotCells(grid) {
-        this.paintSquares(grid.allLiveCells(), 'rgba(0,0,0,1)');
+        this.paintSquares(grid.allLiveCells, this.black);
     }
 }
 
@@ -437,27 +447,84 @@ __webpack_require__.r(__webpack_exports__);
 
 class MoleculePainter extends _canvaspainter__WEBPACK_IMPORTED_MODULE_0__.CanvasPainter {
     plotCells(grid) {
-        const livingCells = grid.allLiveCells();
+        const livingCells = grid.allLiveCells;
         //orthogonal connections
         livingCells
             .forEach(cell => {
             cell.livingOrthogonalNeighbours
                 .forEach(neighbour => {
-                this.paintThinLineBetweenCells(cell, neighbour);
+                this.paintLineBetweenCells(cell, neighbour);
             });
         });
         this.cellsWithNoLivingOrthogonalNeihbours(livingCells)
             .forEach(cell => {
             cell.livingDiagonalNeighbours
                 .forEach(neighbour => {
-                this.paintThinLineBetweenCells(cell, neighbour);
+                this.paintLineBetweenCells(cell, neighbour);
             });
         });
         this.cellsWithOneLivingOrthogonalNeihbours(livingCells).forEach(cell => {
-            this.cellsWithOneLivingOrthogonalNeihbours(cell.diagonalNeighbours.filter(neighbour => neighbour.isAlive))
-                .forEach(neighbour => this.paintThinLineBetweenCells(cell, neighbour));
+            cell.livingDiagonalNeighbours
+                .forEach(neighbour => {
+                if (this.cellsHaveNoCommonLivingOrthogonalNeighbours(cell, neighbour)) {
+                    this.paintLineBetweenCells(cell, neighbour);
+                }
+            });
         });
-        this.paintCellsAsHollowDots(livingCells, 'rgba(0,0,0,1)', 'rgba(128,128,0,1)');
+        this.paintCellsAsHollowDots(livingCells, this.gray);
+        this.paintCellsAsHollowDots(this.cellsWithNoLivingNeighbours(livingCells), this.yellow);
+        this.paintCellsAsHollowDots(this.cellsWithOneLivingOrthogonalNeighbour(livingCells), this.green);
+        this.cellsWithOneLivingOrthogonalNeihbours(livingCells).forEach(cell => {
+            cell.livingDiagonalNeighbours
+                .forEach(neighbour => {
+                if (this.cellsHaveNoCommonLivingOrthogonalNeighbours(cell, neighbour)) {
+                    this.paintCellsAsHollowDots([cell, neighbour], this.gray);
+                }
+            });
+        });
+        this.paintCellsAsHollowDots(this.cellsWithOneLivingDiagonalNeighbour(livingCells), this.lightBlue);
+        this.paintCellsAsHollowDots(this.cellsWithTwoDiagonalNeighboursNotOnALine(livingCells), this.orange);
+        this.paintCellsAsHollowDots(this.cellsWithTwoOrthogonalNeighbousNotOnALine(livingCells), this.orange);
+    }
+    cellsWithTwoOrthogonalNeighbousNotOnALine(cells) {
+        return cells
+            .filter(cell => cell.livingNeighbours.length == 2)
+            .filter(cell => cell.livingOrthogonalNeighbours.length == 2)
+            .filter(cell => {
+            const neighbours = cell.livingOrthogonalNeighbours;
+            const n1 = neighbours[0];
+            const n2 = neighbours[1];
+            return n1.columnIndex !== n2.columnIndex && n1.rowIndex !== n2.rowIndex;
+        });
+    }
+    cellsWithTwoDiagonalNeighboursNotOnALine(cells) {
+        return cells
+            .filter(cell => cell.livingNeighbours.length == 2)
+            .filter(cell => cell.livingDiagonalNeighbours.length == 2)
+            .filter(cell => {
+            const neighbours = cell.livingDiagonalNeighbours;
+            const n1 = neighbours[0];
+            const n2 = neighbours[1];
+            return n1.columnIndex == n2.columnIndex || n1.rowIndex == n2.rowIndex;
+        });
+    }
+    cellsWithNoLivingNeighbours(cells) {
+        return cells.filter(cell => cell.livingNeighbours.length == 0);
+    }
+    cellsWithOneLivingOrthogonalNeighbour(cells) {
+        return cells
+            //.filter(cell => cell.livingNeighbours.length == 1)
+            .filter(cell => cell.livingOrthogonalNeighbours.length == 1);
+    }
+    cellsWithOneLivingDiagonalNeighbour(cells) {
+        return cells
+            .filter(cell => cell.livingNeighbours.length == 1)
+            .filter(cell => cell.livingDiagonalNeighbours.length == 1);
+    }
+    cellsHaveNoCommonLivingOrthogonalNeighbours(cell1, cell2) {
+        const commonLivingOrthogonalCells = cell1.livingOrthogonalNeighbours
+            .filter(c1 => cell2.livingOrthogonalNeighbours.some(c2 => c1 == c2));
+        return commonLivingOrthogonalCells.length == 0;
     }
     cellsWithNoLivingOrthogonalNeihbours(cells) {
         return cells
@@ -486,7 +553,7 @@ __webpack_require__.r(__webpack_exports__);
 
 class NeighboursCountPainter extends _canvaspainter__WEBPACK_IMPORTED_MODULE_0__.CanvasPainter {
     plotCells(grid) {
-        grid.allLiveCells().forEach(cell => {
+        grid.allLiveCells.forEach(cell => {
             this.paintSquares([cell], this.colorGivenNumberOfNeighboursToOfCell(cell));
         });
     }
@@ -518,55 +585,64 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "RibbonPainter": () => (/* binding */ RibbonPainter)
 /* harmony export */ });
-/* harmony import */ var _canvaspainter__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./canvaspainter */ "./src/view/cellpainters/canvaspainter.ts");
+/* harmony import */ var _model_cellconnection__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../model/cellconnection */ "./src/model/cellconnection.ts");
+/* harmony import */ var _canvaspainter__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./canvaspainter */ "./src/view/cellpainters/canvaspainter.ts");
 
-class RibbonPainter extends _canvaspainter__WEBPACK_IMPORTED_MODULE_0__.CanvasPainter {
+
+class RibbonPainter extends _canvaspainter__WEBPACK_IMPORTED_MODULE_1__.CanvasPainter {
     plotCells(grid) {
         grid.clusters.forEach(cluster => {
-            const cellsToConnect = cluster.length;
-            const connectedCells = new Set();
-            const connectionTrail = [];
-            const startCell = radomCellInArray(cluster);
-            connectCell(startCell);
-            while (cellsToConnect > connectedCells.size) {
-                while (cellHasNoUnconnectedNeigbours(currentCell()) && connectedTrailNotEmpty()) {
-                    stepBackwards();
-                }
-                const randomNeighbour = randomUnconnectedNeighbour(currentCell());
-                this.paintMediumShadowLineBetweenCells(currentCell(), randomNeighbour);
-                this.paintMediumGreenLineBetweenCells(currentCell(), randomNeighbour);
-                connectCell(randomNeighbour);
-            }
-            function currentCell() {
-                const currentCell = connectionTrail[connectionTrail.length - 1];
-                return currentCell;
-            }
-            function connectedTrailNotEmpty() {
-                return connectionTrail.length != 0;
-            }
-            function cellHasNoUnconnectedNeigbours(cell) {
-                return cell.livingNeighbours.every(neigbour => connectedCells.has(neigbour));
-            }
-            function stepBackwards() {
-                connectionTrail.pop();
-            }
-            function randomUnconnectedNeighbour(cell) {
-                const unvisitedNeighbours = cell.livingNeighbours
-                    .filter(neighbour => !connectedCells.has(neighbour));
-                return radomCellInArray(unvisitedNeighbours);
-            }
-            function connectCell(cell) {
-                connectedCells.add(cell);
-                connectionTrail.push(cell);
-            }
-            function radomCellInArray(cells) {
-                return cells[Math.floor(Math.random() * cells.length)];
-            }
+            const randomConnections = this.generateMazelikeRandomCellConnections(cluster);
+            randomConnections.forEach(connection => {
+                this.paintLineBetweenCells(connection.cell1, connection.cell2, this.mediumLineWidth, this.gray, true);
+                this.paintLineBetweenCells(connection.cell1, connection.cell2, this.mediumLineWidth, this.green);
+            });
         });
-        const lonleyCells = grid.allLiveCells().filter(cell => cell.livingNeighbours.length == 0);
-        this.paintCircles(lonleyCells, 'rgba(128,128,128,1)', 7, true);
-        this.paintCircles(lonleyCells, 'rgba(0,255,0,1)', 7, false);
-        //this.paintCellsAsSmallHollowDots(grid.allLiveCells(), 'rgba(0,255,0,1)', 'rgba(0,0,0,1)');
+        const lonleyCells = grid.allLiveCells.filter(cell => cell.livingNeighbours.length == 0);
+        this.paintCircles(lonleyCells, this.gray, this.mediumLineWidth, true);
+        this.paintCircles(lonleyCells, this.green, this.mediumLineWidth, false);
+    }
+    generateMazelikeRandomCellConnections(cluster) {
+        const cellConnections = [];
+        const cellsToConnect = cluster.length;
+        const connectedCells = new Set();
+        const connectionTrail = [];
+        const startCell = radomCellInArray(cluster);
+        connectCell(startCell);
+        while (cellsToConnect > connectedCells.size) {
+            while (cellHasNoUnconnectedNeigbours(currentCell()) && connectedTrailNotEmpty()) {
+                stepBackwards();
+            }
+            const randomNeighbour = randomUnconnectedNeighbour(currentCell());
+            cellConnections.push(new _model_cellconnection__WEBPACK_IMPORTED_MODULE_0__.CellConnection(currentCell(), randomNeighbour));
+            connectCell(randomNeighbour);
+        }
+        return cellConnections;
+        function currentCell() {
+            const currentCell = connectionTrail[connectionTrail.length - 1];
+            return currentCell;
+        }
+        function connectedTrailNotEmpty() {
+            return connectionTrail.length != 0;
+        }
+        function cellHasNoUnconnectedNeigbours(cell) {
+            return cell.livingNeighbours.every(neigbour => connectedCells.has(neigbour));
+        }
+        function stepBackwards() {
+            connectionTrail.pop();
+        }
+        function randomUnconnectedNeighbour(cell) {
+            const unvisitedNeighbours = cell.livingNeighbours
+                .filter(neighbour => !connectedCells.has(neighbour));
+            return radomCellInArray(unvisitedNeighbours);
+        }
+        function connectCell(cell) {
+            connectedCells.add(cell);
+            connectionTrail.push(cell);
+        }
+        function radomCellInArray(cells) {
+            return cells[Math.floor(Math.random() * cells.length)];
+        }
     }
 }
 
@@ -587,49 +663,21 @@ __webpack_require__.r(__webpack_exports__);
 
 class SmoothCellPainter extends _canvaspainter__WEBPACK_IMPORTED_MODULE_0__.CanvasPainter {
     plotCells(grid) {
-        const livingCells = grid.allLiveCells();
+        const livingCells = grid.allLiveCells;
         livingCells.forEach(livingCell => {
             livingCell.livingNeighbours
                 .forEach(livingNeighbourCell => {
-                this.paintWideLineBetweenCells(livingCell, livingNeighbourCell);
+                this.paintLineBetweenCells(livingCell, livingNeighbourCell, this.wideLineWidth);
             });
         });
         livingCells.forEach(livingCell => {
             livingCell.deadNeighbours
                 .filter(deadCell => deadCell.livingOrthogonalNeighbours.length >= 3)
                 .forEach(deadCell => {
-                this.paintWhiteCircle(deadCell);
+                this.paintCircles([deadCell], this.white);
             });
         });
-        this.paintBlackCircles(livingCells);
-    }
-}
-
-
-/***/ }),
-
-/***/ "./src/view/cellpainters/trusspainter.ts":
-/*!***********************************************!*\
-  !*** ./src/view/cellpainters/trusspainter.ts ***!
-  \***********************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "TrussPainter": () => (/* binding */ TrussPainter)
-/* harmony export */ });
-/* harmony import */ var _canvaspainter__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./canvaspainter */ "./src/view/cellpainters/canvaspainter.ts");
-
-class TrussPainter extends _canvaspainter__WEBPACK_IMPORTED_MODULE_0__.CanvasPainter {
-    plotCells(grid) {
-        //draw all connections
-        grid.allLiveCells().forEach(livingCell => {
-            livingCell.livingNeighbours
-                .forEach(livingNeighbourCell => {
-                this.paintThinLineBetweenCells(livingCell, livingNeighbourCell);
-            });
-        });
-        this.paintCellsAsHollowDots(grid.allLiveCells(), 'rgba(0,0,0,1)', 'rgba(128,255,255,1)');
+        this.paintCircles(livingCells, this.black);
     }
 }
 
@@ -765,7 +813,6 @@ __webpack_require__.r(__webpack_exports__);
 
 const grid = new _model_grid__WEBPACK_IMPORTED_MODULE_1__.Grid(60, 55);
 const view = new _view_view__WEBPACK_IMPORTED_MODULE_2__.View();
-view.redrawGrid(grid);
 //Glider
 grid.cellAt(15, 1).live();
 grid.cellAt(15, 2).live();
@@ -810,8 +857,11 @@ function getMouseCoordinate(event, elementId) {
     return new _view_coordinate__WEBPACK_IMPORTED_MODULE_4__.Coordinate(x, y);
 }
 function killAll() {
-    grid.killAll();
-    view.redrawGrid(grid);
+    const reallyKillAll = confirm('Do you want to kill every cell?');
+    if (reallyKillAll) {
+        grid.killAll();
+        view.redrawGrid(grid);
+    }
 }
 function keyPressed(event) {
     switch (event.key) {
@@ -820,9 +870,6 @@ function keyPressed(event) {
             break;
         case 'r':
             changeCellPainter('ribbon');
-            break;
-        case 't':
-            changeCellPainter('truss');
             break;
         case 'a':
             changeCellPainter('age');
@@ -853,7 +900,6 @@ document.getElementById('circularButton').addEventListener('click', () => change
 document.getElementById('smoothButton').addEventListener('click', () => changeCellPainter('smooth'));
 document.getElementById('cellAgeButton').addEventListener('click', () => changeCellPainter('age'));
 document.getElementById('neigbourcountButton').addEventListener('click', () => changeCellPainter('neighbours'));
-document.getElementById('trussButton').addEventListener('click', () => changeCellPainter('truss'));
 document.getElementById('ribbonButton').addEventListener('click', () => changeCellPainter('ribbon'));
 document.getElementById('moleculeButton').addEventListener('click', () => changeCellPainter('molecule'));
 document.getElementById('killAllButton').addEventListener('click', () => killAll());
