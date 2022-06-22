@@ -14,8 +14,8 @@
 
 <body>
     <button type="button" id="_nothing" disabled>_</button>
-    <button type="button" id="startStopButton" disabled>start/stop (w)</button>
-    <button type="button" id="evolveButton">Evolve (e)</button>
+    <button type="button" id="startStopButton">Start/Stop (w)</button>
+    <button type="button" id="stepButton">Step (e)</button>
     <button type="button" id="ribbonButton">Ribbon (r)</button>
     <br>
 
@@ -30,8 +30,12 @@
     <button type="button" id="classicButton">Classic (c)</button>
     <button type="button" id="neigbourcountButton">Neighbours (v)</button>
     <br>
+    <div id="viewport">
+        <canvas id="gridLayer"></canvas>
+        <canvas id="foreground"></canvas>
 
-    <canvas id="myCanvas" width="1200" height="1100"></canvas><br>
+    </div>
+    <br>
     Check out source code at <a href="https://github.com/kemlo77/game-of-life">github</a>.
 </body>
 

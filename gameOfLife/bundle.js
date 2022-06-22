@@ -141,14 +141,14 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _cell__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./cell */ "./src/model/cell.ts");
 
 class Grid {
-    constructor(width, height) {
-        this._grid = this.generateColumnOfRowOfCells(width, height);
+    constructor(columns, rows) {
+        this._grid = this.generateColumnOfRowOfCells(columns, rows);
         this.connectCellsWithNeighbours();
     }
-    get width() {
+    get numberOfColumns() {
         return this._grid[0].length;
     }
-    get height() {
+    get numberOfRows() {
         return this._grid.length;
     }
     cellAt(x, y) {
@@ -230,7 +230,7 @@ __webpack_require__.r(__webpack_exports__);
 
 class CanvasPainter {
     constructor() {
-        this.canvasElement = document.getElementById('myCanvas');
+        this.canvasElement = document.getElementById('gridLayer');
         this.canvasCtx = this.canvasElement.getContext('2d');
         this.white = 'rgba(255,255,255,1)';
         this.black = 'rgba(0,0,0,1)';
@@ -239,7 +239,13 @@ class CanvasPainter {
         this.orange = 'rgba(255,127,0,1)';
         this.yellow = 'rgba(255,255,0,1)';
         this.lightBlue = 'rgba(100,100,255,1)';
-        this.gridCellWidth = 20;
+        this._gridCellWidth = 20;
+    }
+    get gridCellWidth() {
+        return this._gridCellWidth;
+    }
+    set gridCellWidth(newWidth) {
+        this._gridCellWidth = newWidth;
     }
     get thinLineWidth() {
         return this.gridCellWidth * 0.1;
@@ -710,6 +716,52 @@ class Coordinate {
 
 /***/ }),
 
+/***/ "./src/view/foregroundpainter.ts":
+/*!***************************************!*\
+  !*** ./src/view/foregroundpainter.ts ***!
+  \***************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "ForegroundPainter": () => (/* binding */ ForegroundPainter)
+/* harmony export */ });
+/* harmony import */ var _model_cell__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../model/cell */ "./src/model/cell.ts");
+/* harmony import */ var _cellpainters_canvaspainter__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./cellpainters/canvaspainter */ "./src/view/cellpainters/canvaspainter.ts");
+
+
+class ForegroundPainter extends _cellpainters_canvaspainter__WEBPACK_IMPORTED_MODULE_1__.CanvasPainter {
+    constructor() {
+        super(...arguments);
+        this.foregroundCanvasElement = document.getElementById('foreground');
+        this.foregroundCanvasCtx = this.foregroundCanvasElement.getContext('2d');
+        this.transparentGreen = 'rgba(255,127,0,0.6)';
+        this.previousCell = new _model_cell__WEBPACK_IMPORTED_MODULE_0__.Cell(0, 0);
+    }
+    clearThePreviousCellOnCanvas() {
+        const position = this.upperLeftCornerOfCell(this.previousCell);
+        this.foregroundCanvasCtx.clearRect(position.x, position.y, this.gridCellWidth, this.gridCellWidth);
+    }
+    colorCellOnMousePosition(position) {
+        const cell = new _model_cell__WEBPACK_IMPORTED_MODULE_0__.Cell(Math.floor(position.x / this.gridCellWidth), Math.floor(position.y / this.gridCellWidth));
+        this.paintSquare(cell);
+        this.previousCell = cell;
+    }
+    paintSquare(cell) {
+        const padding = 1;
+        this.foregroundCanvasCtx.fillStyle = this.transparentGreen;
+        this.foregroundCanvasCtx.beginPath(); //varför måste jag ha med detta för att färgändring ska slå igenom
+        this.foregroundCanvasCtx.stroke(); // dito
+        const squareWidth = this.gridCellWidth - 2 * padding;
+        const corner = this.upperLeftCornerOfCell(cell);
+        this.foregroundCanvasCtx.rect(corner.x + padding, corner.y + padding, squareWidth, squareWidth);
+        this.foregroundCanvasCtx.fill();
+    }
+}
+
+
+/***/ }),
+
 /***/ "./src/view/view.ts":
 /*!**************************!*\
   !*** ./src/view/view.ts ***!
@@ -720,18 +772,61 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "View": () => (/* binding */ View)
 /* harmony export */ });
-/* harmony import */ var _cellpainters_smoothpainter__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./cellpainters/smoothpainter */ "./src/view/cellpainters/smoothpainter.ts");
+/* harmony import */ var _foregroundpainter__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./foregroundpainter */ "./src/view/foregroundpainter.ts");
+/* harmony import */ var _cellpainters_smoothpainter__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./cellpainters/smoothpainter */ "./src/view/cellpainters/smoothpainter.ts");
+
 
 class View {
-    constructor() {
-        this._cellPainter = new _cellpainters_smoothpainter__WEBPACK_IMPORTED_MODULE_0__.SmoothCellPainter();
+    constructor(grid) {
+        this._cellPainter = new _cellpainters_smoothpainter__WEBPACK_IMPORTED_MODULE_1__.SmoothCellPainter();
+        this._foregroundPainter = new _foregroundpainter__WEBPACK_IMPORTED_MODULE_0__.ForegroundPainter();
+        this.delayedAdjustCanvas = this.debounce(() => this.adjustCanvas(), 500);
+        this._grid = grid;
     }
     set cellPainter(cellPainter) {
+        cellPainter.gridCellWidth = this._cellWidth;
         this._cellPainter = cellPainter;
     }
-    redrawGrid(grid) {
+    get cellWidth() {
+        return this._cellWidth;
+    }
+    redrawGrid() {
         this._cellPainter.clearTheCanvas();
-        this._cellPainter.plotCells(grid);
+        this._cellPainter.plotCells(this._grid);
+    }
+    drawMouseCellPosition(position) {
+        this._foregroundPainter.colorCellOnMousePosition(position);
+    }
+    removePreviousMouseCellPosition() {
+        this._foregroundPainter.clearThePreviousCellOnCanvas();
+    }
+    adjustCanvas() {
+        const newCanvasWidth = window.innerWidth - 16;
+        const newCanvasHeight = window.innerHeight - 16;
+        const canvases = document.querySelectorAll('div#viewport canvas');
+        canvases.forEach((canvas) => {
+            canvas.width = newCanvasWidth;
+            canvas.height = newCanvasHeight;
+        });
+        if (newCanvasWidth > newCanvasHeight) {
+            this._cellWidth = newCanvasWidth / this._grid.numberOfColumns;
+        }
+        else {
+            this._cellWidth = newCanvasHeight / this._grid.numberOfRows;
+        }
+        this._cellPainter.gridCellWidth = this._cellWidth;
+        this._foregroundPainter.gridCellWidth = this._cellWidth;
+        this.redrawGrid();
+    }
+    debounce(func, wait) {
+        let timeoutID;
+        return function (...args) {
+            clearTimeout(timeoutID);
+            const context = this;
+            timeoutID = window.setTimeout(() => {
+                func.apply(context, args);
+            }, wait);
+        };
     }
 }
 
@@ -811,8 +906,10 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-const grid = new _model_grid__WEBPACK_IMPORTED_MODULE_1__.Grid(60, 55);
-const view = new _view_view__WEBPACK_IMPORTED_MODULE_2__.View();
+const grid = new _model_grid__WEBPACK_IMPORTED_MODULE_1__.Grid(60, 60);
+const view = new _view_view__WEBPACK_IMPORTED_MODULE_2__.View(grid);
+let running = false;
+let handle;
 //Glider
 grid.cellAt(15, 1).live();
 grid.cellAt(15, 2).live();
@@ -837,18 +934,29 @@ grid.cellAt(31, 26).live();
 grid.cellAt(32, 26).live();
 grid.cellAt(33, 27).live();
 grid.cellAt(32, 28).live();
-function evolveAndPaint() {
+function toggleRunning() {
+    if (running) {
+        running = false;
+        clearInterval(handle);
+    }
+    else {
+        running = true;
+        handle = setInterval(() => takeAStep(), 500);
+    }
+}
+function takeAStep() {
     grid.evolve();
-    view.redrawGrid(grid);
+    view.redrawGrid();
 }
 function changeCellPainter(cellPaintertype) {
     view.cellPainter = _view_cellpainters_cellpainterprovider__WEBPACK_IMPORTED_MODULE_3__.CellPainterProvider.getCellPainter(cellPaintertype);
-    view.redrawGrid(grid);
+    view.redrawGrid();
 }
 function canvasLeftClicked(event, canvasId) {
     const coordinate = getMouseCoordinate(event, canvasId);
-    grid.cellAt(Math.floor(coordinate.x / 20), Math.floor(coordinate.y / 20)).toggleLifeDeath();
-    view.redrawGrid(grid);
+    //TODO: det här kanske borde ligga någon annanstans? Eget  objekt?
+    grid.cellAt(Math.floor(coordinate.x / view.cellWidth), Math.floor(coordinate.y / view.cellWidth)).toggleLifeDeath();
+    view.redrawGrid();
 }
 function getMouseCoordinate(event, elementId) {
     const rect = document.getElementById(elementId).getBoundingClientRect();
@@ -856,17 +964,28 @@ function getMouseCoordinate(event, elementId) {
     const y = event.clientY - rect.top;
     return new _view_coordinate__WEBPACK_IMPORTED_MODULE_4__.Coordinate(x, y);
 }
+function canvasMouseMovement(event, canvasId) {
+    const mousePosition = getMouseCoordinate(event, canvasId);
+    view.removePreviousMouseCellPosition();
+    view.drawMouseCellPosition(mousePosition);
+}
+function canvasMouseOut() {
+    view.removePreviousMouseCellPosition();
+}
 function killAll() {
     const reallyKillAll = confirm('Do you want to kill every cell?');
     if (reallyKillAll) {
         grid.killAll();
-        view.redrawGrid(grid);
+        view.redrawGrid();
     }
 }
 function keyPressed(event) {
     switch (event.key) {
+        case 'w':
+            toggleRunning();
+            break;
         case 'e':
-            evolveAndPaint();
+            takeAStep();
             break;
         case 'r':
             changeCellPainter('ribbon');
@@ -894,7 +1013,7 @@ function keyPressed(event) {
             break;
     }
 }
-document.getElementById('evolveButton').addEventListener('click', () => evolveAndPaint());
+document.getElementById('stepButton').addEventListener('click', () => takeAStep());
 document.getElementById('classicButton').addEventListener('click', () => changeCellPainter('classic'));
 document.getElementById('circularButton').addEventListener('click', () => changeCellPainter('circular'));
 document.getElementById('smoothButton').addEventListener('click', () => changeCellPainter('smooth'));
@@ -902,10 +1021,15 @@ document.getElementById('cellAgeButton').addEventListener('click', () => changeC
 document.getElementById('neigbourcountButton').addEventListener('click', () => changeCellPainter('neighbours'));
 document.getElementById('ribbonButton').addEventListener('click', () => changeCellPainter('ribbon'));
 document.getElementById('moleculeButton').addEventListener('click', () => changeCellPainter('molecule'));
+document.getElementById('startStopButton').addEventListener('click', () => toggleRunning());
 document.getElementById('killAllButton').addEventListener('click', () => killAll());
-document.getElementById('myCanvas')
-    .addEventListener('click', (event) => canvasLeftClicked(event, event.target.id));
+const foreground = document.getElementById('foreground');
+foreground.addEventListener('click', (event) => canvasLeftClicked(event, event.target.id));
+foreground.addEventListener('mousemove', (event) => canvasMouseMovement(event, event.target.id));
+foreground.addEventListener('mouseout', (event) => canvasMouseOut());
 document.addEventListener('keydown', (event) => keyPressed(event));
+addEventListener('load', () => view.adjustCanvas());
+addEventListener('resize', () => view.delayedAdjustCanvas());
 
 })();
 
