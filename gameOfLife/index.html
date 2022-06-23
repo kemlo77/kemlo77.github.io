@@ -5,7 +5,7 @@
 <head>
     <title>Game of life</title>
     <meta name="title" content="Game of Life">
-    <meta name="description" content="A Game of Life implementation in typescript with different visualizations">
+    <meta name="description" content="An implementation of Conway's Game of Life with different visualization styles">
     <meta name="keywords" content="game, life, visualization, html5, canvas, typescript">
     <meta name="robots" content="index, follow">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
@@ -13,30 +13,60 @@
 <script defer src="bundle.js"></script><link href="style.css" rel="stylesheet"></head>
 
 <body>
-    <button type="button" id="_nothing" disabled>_</button>
-    <button type="button" id="startStopButton">Start/Stop (w)</button>
-    <button type="button" id="stepButton">Step (e)</button>
-    <button type="button" id="ribbonButton">Ribbon (r)</button>
-    <br>
+    <div id="description">
+        <h1>Game of Life visualized differently</h1>
+        <p>
+            Game of Life has always fascinated me. But I was also curious about visualizing it differently. What if the
+            age of each cell was visualized by color?
+            Would a smoother style with rounded corners give it a more organic look?
+        <figure>
+            <img src="images/glider visualized differently..png" alt="Game of life Glider visualized differently"
+                width="75%" height="75%">
+            <figcaption>Glider visualized differently (classic, by age, by neighbour count, circular, random ribbon,
+                molecule and smooth).</figcaption>
+        </figure>
+        <figure>
+            <img src="images/oscillating pulsar visualized differently..png"
+                alt="Game of life oscillating pulsar visualized differently" width="75%" height="75%">
+            <figcaption>Oscillating pulsar visualized differently (classic, molecule and smooth).</figcaption>
+        </figure>
+        </p>
 
-    <button type="button" id="cellAgeButton">Age (a)</button>
-    <button type="button" id="smoothButton">Smooth (s)</button>
-    <button type="button" id="circularButton">Circular (d)</button>
-    <button type="button" id="moleculeButton">Molecule (f)</button>
-    <br>
 
-    <button type="button" id="_niente" disabled>_</button>
-    <button type="button" id="killAllButton">Clear (x)</button>
-    <button type="button" id="classicButton">Classic (c)</button>
-    <button type="button" id="neigbourcountButton">Neighbours (v)</button>
-    <br>
+        <p>
+            Try it out!
+            <br>
+            Tip: Use the keyboard shortcuts!
+        </p>
+        <p>
+            Check out source code at <a href="https://github.com/kemlo77/game-of-life">github</a>.
+        </p>
+    </div>
+
+    <div id="buttons">
+        <button type="button" id="_nothing" disabled>_</button>
+        <button type="button" id="startStopButton">Start/Stop (w)</button>
+        <button type="button" id="stepButton">Step (e)</button>
+        <button type="button" id="ribbonButton">Ribbon (r)</button>
+        <br>
+
+        <button type="button" id="cellAgeButton">Age (a)</button>
+        <button type="button" id="smoothButton">Smooth (s)</button>
+        <button type="button" id="circularButton">Circular (d)</button>
+        <button type="button" id="moleculeButton">Molecule (f)</button>
+        <br>
+
+        <button type="button" id="_niente" disabled>_</button>
+        <button type="button" id="killAllButton">Clear (x)</button>
+        <button type="button" id="classicButton">Classic (c)</button>
+        <button type="button" id="neigbourcountButton">Neighbours (v)</button>
+    </div>
+
     <div id="viewport">
         <canvas id="gridLayer"></canvas>
         <canvas id="foreground"></canvas>
 
     </div>
-    <br>
-    Check out source code at <a href="https://github.com/kemlo77/game-of-life">github</a>.
 </body>
 
 </html>

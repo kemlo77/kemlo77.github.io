@@ -355,15 +355,15 @@ class CellAgePainter extends _canvaspainter__WEBPACK_IMPORTED_MODULE_0__.CanvasP
 
 /***/ }),
 
-/***/ "./src/view/cellpainters/cellpainterprovider.ts":
-/*!******************************************************!*\
-  !*** ./src/view/cellpainters/cellpainterprovider.ts ***!
-  \******************************************************/
+/***/ "./src/view/cellpainters/cellpainterfactory.ts":
+/*!*****************************************************!*\
+  !*** ./src/view/cellpainters/cellpainterfactory.ts ***!
+  \*****************************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "CellPainterProvider": () => (/* binding */ CellPainterProvider)
+/* harmony export */   "CellPainterFactory": () => (/* binding */ CellPainterFactory)
 /* harmony export */ });
 /* harmony import */ var _cellagepainter__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./cellagepainter */ "./src/view/cellpainters/cellagepainter.ts");
 /* harmony import */ var _circularcellpainter__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./circularcellpainter */ "./src/view/cellpainters/circularcellpainter.ts");
@@ -380,7 +380,7 @@ __webpack_require__.r(__webpack_exports__);
 
 
 //TODO: döpa om till factory?
-class CellPainterProvider {
+class CellPainterFactory {
     static getCellPainter(painterType) {
         switch (painterType) {
             case 'circular': return new _circularcellpainter__WEBPACK_IMPORTED_MODULE_1__.CircularCellPainter();
@@ -801,13 +801,15 @@ class View {
         this._foregroundPainter.clearThePreviousCellOnCanvas();
     }
     adjustCanvas() {
-        const newCanvasWidth = window.innerWidth - 16;
+        const newCanvasWidth = window.innerWidth - 32;
         const newCanvasHeight = window.innerHeight - 16;
         const canvases = document.querySelectorAll('div#viewport canvas');
         canvases.forEach((canvas) => {
             canvas.width = newCanvasWidth;
             canvas.height = newCanvasHeight;
         });
+        const div = document.querySelector('div#viewport');
+        div.style.height = newCanvasHeight + 'px';
         if (newCanvasWidth > newCanvasHeight) {
             this._cellWidth = newCanvasWidth / this._grid.numberOfColumns;
         }
@@ -899,7 +901,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _style_css__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./style.css */ "./src/style.css");
 /* harmony import */ var _model_grid__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./model/grid */ "./src/model/grid.ts");
 /* harmony import */ var _view_view__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./view/view */ "./src/view/view.ts");
-/* harmony import */ var _view_cellpainters_cellpainterprovider__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./view/cellpainters/cellpainterprovider */ "./src/view/cellpainters/cellpainterprovider.ts");
+/* harmony import */ var _view_cellpainters_cellpainterfactory__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./view/cellpainters/cellpainterfactory */ "./src/view/cellpainters/cellpainterfactory.ts");
 /* harmony import */ var _view_coordinate__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./view/coordinate */ "./src/view/coordinate.ts");
 
 
@@ -923,9 +925,9 @@ grid.cellAt(6, 3).live();
 grid.cellAt(5, 4).live();
 grid.cellAt(6, 4).live();
 grid.cellAt(7, 4).live();
-//corner
+//corners
 grid.cellAt(0, 0).live();
-grid.cellAt(59, 54).live();
+grid.cellAt(59, 59).live();
 //xxx
 grid.cellAt(30, 27).live();
 grid.cellAt(30, 28).live();
@@ -949,12 +951,11 @@ function takeAStep() {
     view.redrawGrid();
 }
 function changeCellPainter(cellPaintertype) {
-    view.cellPainter = _view_cellpainters_cellpainterprovider__WEBPACK_IMPORTED_MODULE_3__.CellPainterProvider.getCellPainter(cellPaintertype);
+    view.cellPainter = _view_cellpainters_cellpainterfactory__WEBPACK_IMPORTED_MODULE_3__.CellPainterFactory.getCellPainter(cellPaintertype);
     view.redrawGrid();
 }
 function canvasLeftClicked(event, canvasId) {
     const coordinate = getMouseCoordinate(event, canvasId);
-    //TODO: det här kanske borde ligga någon annanstans? Eget  objekt?
     grid.cellAt(Math.floor(coordinate.x / view.cellWidth), Math.floor(coordinate.y / view.cellWidth)).toggleLifeDeath();
     view.redrawGrid();
 }

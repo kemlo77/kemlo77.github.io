@@ -10,6 +10,7 @@ button {
     margin-top: 10px;
     height: 30px;
     width: 110px;
+    text-align: right;
 }
 
 canvas {
@@ -33,6 +34,10 @@ canvas {
 
 #foreground {
     z-index: 2;
+}
+
+img {
+    border: 1px solid black;
 }
 
 /*# sourceMappingURL=style.css.map*/
