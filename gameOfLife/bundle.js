@@ -913,11 +913,24 @@ const view = new _view_view__WEBPACK_IMPORTED_MODULE_2__.View(grid);
 let running = false;
 let handle;
 //Glider
-grid.cellAt(15, 1).live();
-grid.cellAt(15, 2).live();
-grid.cellAt(15, 3).live();
-grid.cellAt(16, 3).live();
-grid.cellAt(17, 2).live();
+grid.cellAt(29, 1).live();
+grid.cellAt(29, 2).live();
+grid.cellAt(29, 3).live();
+grid.cellAt(28, 3).live();
+grid.cellAt(27, 2).live();
+//Penta-decathlon
+grid.cellAt(10, 10).live();
+grid.cellAt(10, 11).live();
+grid.cellAt(9, 12).live();
+grid.cellAt(11, 12).live();
+grid.cellAt(10, 13).live();
+grid.cellAt(10, 14).live();
+grid.cellAt(10, 15).live();
+grid.cellAt(10, 16).live();
+grid.cellAt(9, 17).live();
+grid.cellAt(11, 17).live();
+grid.cellAt(10, 18).live();
+grid.cellAt(10, 19).live();
 //Toad
 grid.cellAt(4, 3).live();
 grid.cellAt(5, 3).live();
@@ -925,6 +938,16 @@ grid.cellAt(6, 3).live();
 grid.cellAt(5, 4).live();
 grid.cellAt(6, 4).live();
 grid.cellAt(7, 4).live();
+//light-weight spaceship
+grid.cellAt(12, 5).live();
+grid.cellAt(12, 7).live();
+grid.cellAt(13, 8).live();
+grid.cellAt(14, 8).live();
+grid.cellAt(15, 8).live();
+grid.cellAt(16, 8).live();
+grid.cellAt(16, 7).live();
+grid.cellAt(16, 6).live();
+grid.cellAt(15, 5).live();
 //corners
 grid.cellAt(0, 0).live();
 grid.cellAt(59, 59).live();
@@ -936,6 +959,13 @@ grid.cellAt(31, 26).live();
 grid.cellAt(32, 26).live();
 grid.cellAt(33, 27).live();
 grid.cellAt(32, 28).live();
+//Z-hexomino
+grid.cellAt(10, 27).live();
+grid.cellAt(11, 27).live();
+grid.cellAt(11, 28).live();
+grid.cellAt(11, 29).live();
+grid.cellAt(11, 30).live();
+grid.cellAt(12, 30).live();
 function toggleRunning() {
     if (running) {
         running = false;
