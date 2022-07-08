@@ -14,6 +14,46 @@ __webpack_require__.r(__webpack_exports__);
 
 /***/ }),
 
+/***/ "./src/model/animator.service.ts":
+/*!***************************************!*\
+  !*** ./src/model/animator.service.ts ***!
+  \***************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "AnimatorService": () => (/* binding */ AnimatorService)
+/* harmony export */ });
+/* harmony import */ var _patterns__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./patterns */ "./src/model/patterns.ts");
+
+class AnimatorService {
+    constructor(grid) {
+        this._grid = grid;
+    }
+    animatePattern(pattern, posX, posY) {
+        pattern.forEach((row, rowIndex) => {
+            row.forEach((shouldLive, columnIndex) => {
+                if (shouldLive) {
+                    this._grid.cellAt(posX + columnIndex, posY + rowIndex).live();
+                }
+            });
+        });
+    }
+    createPattern(name, posX, posY) {
+        this.animatePattern(_patterns__WEBPACK_IMPORTED_MODULE_0__.patternsMap.get(name), posX, posY);
+    }
+    createCorners() {
+        this._grid.cellAt(0, 0).live();
+        this._grid.cellAt(this._grid.numberOfColumns - 1, this._grid.numberOfRows - 1).live();
+    }
+    createMidpoints() {
+        this._grid.cellAt(this._grid.numberOfColumns / 2, this._grid.numberOfRows / 2).live();
+    }
+}
+
+
+/***/ }),
+
 /***/ "./src/model/cell.ts":
 /*!***************************!*\
   !*** ./src/model/cell.ts ***!
@@ -145,6 +185,26 @@ class Grid {
         this._grid = this.generateColumnOfRowOfCells(columns, rows);
         this.connectCellsWithNeighbours();
     }
+    generateColumnOfRowOfCells(width, height) {
+        const columnOfRows = [];
+        for (let y = 0; y < height; y++) {
+            const row = [];
+            for (let x = 0; x < width; x++) {
+                row.push(new _cell__WEBPACK_IMPORTED_MODULE_0__.Cell(x, y));
+            }
+            columnOfRows.push(row);
+        }
+        return columnOfRows;
+    }
+    connectCellsWithNeighbours() {
+        this.allCells.forEach(currentCell => {
+            this.allCells
+                .filter(cell => cell !== currentCell)
+                .filter(cell => Math.abs(currentCell.columnIndex - cell.columnIndex) <= 1)
+                .filter(cell => Math.abs(currentCell.rowIndex - cell.rowIndex) <= 1)
+                .forEach(cell => currentCell.addNeighbour(cell));
+        });
+    }
     get numberOfColumns() {
         return this._grid[0].length;
     }
@@ -160,7 +220,7 @@ class Grid {
     get allLiveCells() {
         return this.allCells.filter(cell => cell.isAlive);
     }
-    get clusters() {
+    get clustersOfLiveCells() {
         const clusterArray = [];
         const alreadyChecked = new Set();
         for (const livingCell of this.allLiveCells) {
@@ -184,157 +244,239 @@ class Grid {
         }
         return clusterArray;
     }
-    generateColumnOfRowOfCells(width, height) {
-        const columnOfRows = [];
-        for (let y = 0; y < height; y++) {
-            const row = [];
-            for (let x = 0; x < width; x++) {
-                row.push(new _cell__WEBPACK_IMPORTED_MODULE_0__.Cell(x, y));
-            }
-            columnOfRows.push(row);
-        }
-        return columnOfRows;
-    }
-    connectCellsWithNeighbours() {
-        this.allCells.forEach(currentCell => {
-            this.allCells
-                .filter(cell => cell !== currentCell)
-                .filter(cell => Math.abs(currentCell.columnIndex - cell.columnIndex) <= 1)
-                .filter(cell => Math.abs(currentCell.rowIndex - cell.rowIndex) <= 1)
-                .forEach(cell => currentCell.addNeighbour(cell));
-        });
-    }
-    evolve() {
-        this.allCells.forEach(cell => cell.planFate());
-        this.allCells.forEach(cell => cell.executeFate());
-    }
-    killAll() {
-        this.allCells.forEach(cell => cell.die());
-    }
 }
 
 
 /***/ }),
 
-/***/ "./src/view/cellpainters/canvaspainter.ts":
-/*!************************************************!*\
-  !*** ./src/view/cellpainters/canvaspainter.ts ***!
-  \************************************************/
+/***/ "./src/model/patterns.ts":
+/*!*******************************!*\
+  !*** ./src/model/patterns.ts ***!
+  \*******************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "CanvasPainter": () => (/* binding */ CanvasPainter)
+/* harmony export */   "glider": () => (/* binding */ glider),
+/* harmony export */   "lightweightSpaceship": () => (/* binding */ lightweightSpaceship),
+/* harmony export */   "oscillatingPulsar": () => (/* binding */ oscillatingPulsar),
+/* harmony export */   "patternsMap": () => (/* binding */ patternsMap),
+/* harmony export */   "pentaDecathlon": () => (/* binding */ pentaDecathlon),
+/* harmony export */   "ship": () => (/* binding */ ship),
+/* harmony export */   "toad": () => (/* binding */ toad),
+/* harmony export */   "zHexomino": () => (/* binding */ zHexomino)
 /* harmony export */ });
-/* harmony import */ var _coordinate__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../coordinate */ "./src/view/coordinate.ts");
+const pentaDecathlon = [
+    [0, 0, 1, 0, 0, 0, 0, 1, 0, 0],
+    [1, 1, 0, 1, 1, 1, 1, 0, 1, 1],
+    [0, 0, 1, 0, 0, 0, 0, 1, 0, 0]
+];
+const zHexomino = [
+    [1, 1, 0],
+    [0, 1, 0],
+    [0, 1, 0],
+    [0, 1, 1]
+];
+const ship = [
+    [1, 1, 0],
+    [1, 0, 1],
+    [0, 1, 1]
+];
+const toad = [
+    [1, 1, 1, 0],
+    [0, 1, 1, 1]
+];
+const lightweightSpaceship = [
+    [1, 0, 0, 1, 0],
+    [0, 0, 0, 0, 1],
+    [1, 0, 0, 0, 1],
+    [0, 1, 1, 1, 1]
+];
+const glider = [
+    [0, 0, 1],
+    [1, 0, 1],
+    [0, 1, 1]
+];
+const oscillatingPulsar = [
+    [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0],
+    [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0],
+    [0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [1, 1, 1, 0, 0, 1, 1, 0, 1, 1, 0, 0, 1, 1, 1],
+    [0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0],
+    [0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0],
+    [0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0],
+    [1, 1, 1, 0, 0, 1, 1, 0, 1, 1, 0, 0, 1, 1, 1],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0],
+    [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0],
+    [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0]
+];
+const patternsMap = new Map();
+patternsMap.set('pentaDecathlon', pentaDecathlon);
+patternsMap.set('zHexomino', zHexomino);
+patternsMap.set('ship', ship);
+patternsMap.set('toad', toad);
+patternsMap.set('lightweightSpaceship', lightweightSpaceship);
+patternsMap.set('glider', glider);
+patternsMap.set('oscillatingPulsar', oscillatingPulsar);
 
-class CanvasPainter {
-    constructor() {
-        this.canvasElement = document.getElementById('gridLayer');
-        this.canvasCtx = this.canvasElement.getContext('2d');
-        this.white = 'rgba(255,255,255,1)';
+
+/***/ }),
+
+/***/ "./src/view/canvas/canvas.ts":
+/*!***********************************!*\
+  !*** ./src/view/canvas/canvas.ts ***!
+  \***********************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "Canvas": () => (/* binding */ Canvas)
+/* harmony export */ });
+/* harmony import */ var _model_cell__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../model/cell */ "./src/model/cell.ts");
+/* harmony import */ var _coordinate__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../coordinate */ "./src/view/coordinate.ts");
+
+
+class Canvas {
+    constructor(canvasId, grid) {
+        this._cellWidth = 20;
+        this._xOffset = 0;
+        this._yOffset = 0;
         this.black = 'rgba(0,0,0,1)';
-        this.green = 'rgba(0,255,0,1)';
-        this.gray = 'rgba(128,128,128,1)';
-        this.orange = 'rgba(255,127,0,1)';
-        this.yellow = 'rgba(255,255,0,1)';
-        this.lightBlue = 'rgba(100,100,255,1)';
-        this._gridCellWidth = 20;
+        this._canvasElement = document.getElementById(canvasId);
+        this._canvasCtx = this._canvasElement.getContext('2d');
+        this._grid = grid;
     }
-    get gridCellWidth() {
-        return this._gridCellWidth;
+    get width() {
+        return this._width;
     }
-    set gridCellWidth(newWidth) {
-        this._gridCellWidth = newWidth;
+    get height() {
+        return this._height;
+    }
+    get cellWidth() {
+        return this._cellWidth;
     }
     get thinLineWidth() {
-        return this.gridCellWidth * 0.1;
+        return this.cellWidth * 0.1;
     }
     get mediumLineWidth() {
-        return this.gridCellWidth * 0.5;
+        return this.cellWidth * 0.5;
     }
     get wideLineWidth() {
-        return this.gridCellWidth;
+        return this.cellWidth;
     }
     clearTheCanvas() {
-        this.canvasCtx.clearRect(0, 0, this.canvasElement.width, this.canvasElement.height);
+        this._canvasCtx.clearRect(0, 0, this._width, this._height);
+    }
+    updateCanvasWhenWindowChanges() {
+        this._width = window.innerWidth - 32;
+        this._height = window.innerHeight - 16;
+        this._canvasElement.width = this._width;
+        this._canvasElement.height = this._height;
+        if (this._width > this._height) {
+            this._cellWidth = this._width / this._grid.numberOfColumns;
+            this._yOffset = (this._grid.numberOfRows * this._cellWidth - this._height) / 2;
+            this._xOffset = 0;
+        }
+        else {
+            this._cellWidth = this._height / this._grid.numberOfRows;
+            this._yOffset = 0;
+            this._xOffset = (this._grid.numberOfColumns * this._cellWidth - this._width) / 2;
+        }
+    }
+    getCellAttCoordinate(coordinate) {
+        const xOutsideCanvas = 0 > coordinate.x || coordinate.x >= this._width;
+        const yOutsideCanvas = 0 > coordinate.y || coordinate.y >= this._height;
+        if (xOutsideCanvas || yOutsideCanvas) {
+            return new _model_cell__WEBPACK_IMPORTED_MODULE_0__.Cell(0, 0);
+        }
+        const columnIndex = Math.floor((coordinate.x + this._xOffset) / this.cellWidth);
+        const rowIndex = Math.floor((coordinate.y + this._yOffset) / this.cellWidth);
+        return this._grid.cellAt(columnIndex, rowIndex);
     }
     paintLineBetweenCells(cell1, cell2, width = this.thinLineWidth, color = this.black, offset = false) {
         let shadowOffset = 0;
         if (offset) {
-            shadowOffset = this.gridCellWidth * 0.1;
+            shadowOffset = this.cellWidth * 0.1;
         }
-        this.canvasCtx.strokeStyle = color;
+        this._canvasCtx.strokeStyle = color;
         const centerOfCell1 = this.centerOfCell(cell1);
         const centerOfCell2 = this.centerOfCell(cell2);
-        this.canvasCtx.lineWidth = width;
-        this.canvasCtx.lineCap = 'round';
-        this.canvasCtx.beginPath();
-        this.canvasCtx.moveTo(centerOfCell1.x + shadowOffset, centerOfCell1.y + shadowOffset);
-        this.canvasCtx.lineTo(centerOfCell2.x + shadowOffset, centerOfCell2.y + shadowOffset);
-        this.canvasCtx.stroke();
+        this._canvasCtx.lineWidth = width;
+        this._canvasCtx.lineCap = 'round';
+        this._canvasCtx.beginPath();
+        this._canvasCtx.moveTo(centerOfCell1.x + shadowOffset, centerOfCell1.y + shadowOffset);
+        this._canvasCtx.lineTo(centerOfCell2.x + shadowOffset, centerOfCell2.y + shadowOffset);
+        this._canvasCtx.stroke();
     }
     paintCellsAsHollowDots(cells, innerColor) {
-        this.paintCircles(cells, this.black, this.gridCellWidth * 0.64, false);
-        this.paintCircles(cells, innerColor, this.gridCellWidth * 0.4, false);
+        this.paintCircles(cells, this.black, this.cellWidth * 0.64, false);
+        this.paintCircles(cells, innerColor, this.cellWidth * 0.4, false);
     }
-    paintCircles(cells, color, diameter = this.gridCellWidth, offset = false) {
+    paintCircles(cells, color, diameter = this.cellWidth, offset = false) {
         let shadowOffset = 0;
         if (offset) {
-            shadowOffset = this.gridCellWidth * 0.1;
+            shadowOffset = this.cellWidth * 0.1;
         }
         const radius = diameter / 2;
-        this.canvasCtx.fillStyle = color;
+        this._canvasCtx.fillStyle = color;
         cells.forEach(cell => {
             const center = this.centerOfCell(cell);
-            this.canvasCtx.beginPath();
-            this.canvasCtx.arc(center.x + shadowOffset, center.y + shadowOffset, radius, 0, 2 * Math.PI);
-            this.canvasCtx.fill();
+            this._canvasCtx.beginPath();
+            this._canvasCtx.arc(center.x + shadowOffset, center.y + shadowOffset, radius, 0, 2 * Math.PI);
+            this._canvasCtx.fill();
         });
     }
     paintSquares(cells, color) {
         const padding = 1;
-        this.canvasCtx.fillStyle = color;
-        this.canvasCtx.beginPath(); //varför måste jag ha med detta för att färgändring ska slå igenom
-        this.canvasCtx.stroke(); // dito
-        const squareWidth = this.gridCellWidth - 2 * padding;
+        this._canvasCtx.fillStyle = color;
+        this._canvasCtx.beginPath(); //varför måste jag ha med detta för att färgändring ska slå igenom
+        this._canvasCtx.stroke(); // dito
+        const squareWidth = this.cellWidth - 2 * padding;
         cells.forEach(cell => {
             const corner = this.upperLeftCornerOfCell(cell);
-            this.canvasCtx.rect(corner.x + padding, corner.y + padding, squareWidth, squareWidth);
-            this.canvasCtx.fill();
+            this._canvasCtx.rect(corner.x + padding, corner.y + padding, squareWidth, squareWidth);
+            this._canvasCtx.fill();
         });
     }
+    clearSquare(cell) {
+        const position = this.upperLeftCornerOfCell(cell);
+        this._canvasCtx.clearRect(position.x, position.y, this.cellWidth, this.cellWidth);
+    }
     upperLeftCornerOfCell(cell) {
-        const xPart = cell.columnIndex * this.gridCellWidth;
-        const yPart = cell.rowIndex * this.gridCellWidth;
-        return new _coordinate__WEBPACK_IMPORTED_MODULE_0__.Coordinate(xPart, yPart);
+        const xPart = cell.columnIndex * this.cellWidth - this._xOffset;
+        const yPart = cell.rowIndex * this.cellWidth - this._yOffset;
+        return new _coordinate__WEBPACK_IMPORTED_MODULE_1__.Coordinate(xPart, yPart);
     }
     centerOfCell(cell) {
-        const xPart = cell.columnIndex * this.gridCellWidth + this.gridCellWidth / 2;
-        const yPart = cell.rowIndex * this.gridCellWidth + this.gridCellWidth / 2;
-        return new _coordinate__WEBPACK_IMPORTED_MODULE_0__.Coordinate(xPart, yPart);
+        const xPart = (cell.columnIndex * this.cellWidth + this.cellWidth / 2) - this._xOffset;
+        const yPart = (cell.rowIndex * this.cellWidth + this.cellWidth / 2) - this._yOffset;
+        return new _coordinate__WEBPACK_IMPORTED_MODULE_1__.Coordinate(xPart, yPart);
     }
 }
 
 
 /***/ }),
 
-/***/ "./src/view/cellpainters/cellagepainter.ts":
-/*!*************************************************!*\
-  !*** ./src/view/cellpainters/cellagepainter.ts ***!
-  \*************************************************/
+/***/ "./src/view/cellpainters/agepainter.ts":
+/*!*********************************************!*\
+  !*** ./src/view/cellpainters/agepainter.ts ***!
+  \*********************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "CellAgePainter": () => (/* binding */ CellAgePainter)
+/* harmony export */   "AgePainter": () => (/* binding */ AgePainter)
 /* harmony export */ });
-/* harmony import */ var _canvaspainter__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./canvaspainter */ "./src/view/cellpainters/canvaspainter.ts");
+/* harmony import */ var _cellpainter__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./cellpainter */ "./src/view/cellpainters/cellpainter.ts");
 
-class CellAgePainter extends _canvaspainter__WEBPACK_IMPORTED_MODULE_0__.CanvasPainter {
+class AgePainter extends _cellpainter__WEBPACK_IMPORTED_MODULE_0__.CellPainter {
     plotCells(grid) {
         grid.allLiveCells.forEach(cell => {
-            this.paintSquares([cell], this.colorGivenTheAgeOfCell(cell));
+            this.canvas.paintSquares([cell], this.colorGivenTheAgeOfCell(cell));
         });
     }
     colorGivenTheAgeOfCell(cell) {
@@ -355,6 +497,35 @@ class CellAgePainter extends _canvaspainter__WEBPACK_IMPORTED_MODULE_0__.CanvasP
 
 /***/ }),
 
+/***/ "./src/view/cellpainters/cellpainter.ts":
+/*!**********************************************!*\
+  !*** ./src/view/cellpainters/cellpainter.ts ***!
+  \**********************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "CellPainter": () => (/* binding */ CellPainter)
+/* harmony export */ });
+class CellPainter {
+    constructor(canvas) {
+        this.white = 'rgba(255,255,255,1)';
+        this.black = 'rgba(0,0,0,1)';
+        this.green = 'rgba(0,255,0,1)';
+        this.gray = 'rgba(128,128,128,1)';
+        this.orange = 'rgba(255,127,0,1)';
+        this.yellow = 'rgba(255,255,0,1)';
+        this.lightBlue = 'rgba(100,100,255,1)';
+        this.canvas = canvas;
+    }
+    clearTheCanvas() {
+        this.canvas.clearTheCanvas();
+    }
+}
+
+
+/***/ }),
+
 /***/ "./src/view/cellpainters/cellpainterfactory.ts":
 /*!*****************************************************!*\
   !*** ./src/view/cellpainters/cellpainterfactory.ts ***!
@@ -365,9 +536,9 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "CellPainterFactory": () => (/* binding */ CellPainterFactory)
 /* harmony export */ });
-/* harmony import */ var _cellagepainter__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./cellagepainter */ "./src/view/cellpainters/cellagepainter.ts");
-/* harmony import */ var _circularcellpainter__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./circularcellpainter */ "./src/view/cellpainters/circularcellpainter.ts");
-/* harmony import */ var _classiccellpainter__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./classiccellpainter */ "./src/view/cellpainters/classiccellpainter.ts");
+/* harmony import */ var _agepainter__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./agepainter */ "./src/view/cellpainters/agepainter.ts");
+/* harmony import */ var _circularpainter__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./circularpainter */ "./src/view/cellpainters/circularpainter.ts");
+/* harmony import */ var _classicpainter__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./classicpainter */ "./src/view/cellpainters/classicpainter.ts");
 /* harmony import */ var _moleculepainter__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./moleculepainter */ "./src/view/cellpainters/moleculepainter.ts");
 /* harmony import */ var _ribbonpainter__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./ribbonpainter */ "./src/view/cellpainters/ribbonpainter.ts");
 /* harmony import */ var _neighbourcountpainter__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./neighbourcountpainter */ "./src/view/cellpainters/neighbourcountpainter.ts");
@@ -379,17 +550,16 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-//TODO: döpa om till factory?
 class CellPainterFactory {
-    static getCellPainter(painterType) {
+    static getCellPainter(painterType, canvas) {
         switch (painterType) {
-            case 'circular': return new _circularcellpainter__WEBPACK_IMPORTED_MODULE_1__.CircularCellPainter();
-            case 'smooth': return new _smoothpainter__WEBPACK_IMPORTED_MODULE_6__.SmoothCellPainter();
-            case 'age': return new _cellagepainter__WEBPACK_IMPORTED_MODULE_0__.CellAgePainter();
-            case 'neighbours': return new _neighbourcountpainter__WEBPACK_IMPORTED_MODULE_5__.NeighboursCountPainter();
-            case 'ribbon': return new _ribbonpainter__WEBPACK_IMPORTED_MODULE_4__.RibbonPainter();
-            case 'molecule': return new _moleculepainter__WEBPACK_IMPORTED_MODULE_3__.MoleculePainter();
-            default: return new _classiccellpainter__WEBPACK_IMPORTED_MODULE_2__.ClassicCellPainter();
+            case 'circular': return new _circularpainter__WEBPACK_IMPORTED_MODULE_1__.CircularPainter(canvas);
+            case 'smooth': return new _smoothpainter__WEBPACK_IMPORTED_MODULE_6__.SmoothCellPainter(canvas);
+            case 'age': return new _agepainter__WEBPACK_IMPORTED_MODULE_0__.AgePainter(canvas);
+            case 'neighbours': return new _neighbourcountpainter__WEBPACK_IMPORTED_MODULE_5__.NeighboursCountPainter(canvas);
+            case 'ribbon': return new _ribbonpainter__WEBPACK_IMPORTED_MODULE_4__.RibbonPainter(canvas);
+            case 'molecule': return new _moleculepainter__WEBPACK_IMPORTED_MODULE_3__.MoleculePainter(canvas);
+            default: return new _classicpainter__WEBPACK_IMPORTED_MODULE_2__.ClassicPainter(canvas);
         }
     }
 }
@@ -397,42 +567,48 @@ class CellPainterFactory {
 
 /***/ }),
 
-/***/ "./src/view/cellpainters/circularcellpainter.ts":
-/*!******************************************************!*\
-  !*** ./src/view/cellpainters/circularcellpainter.ts ***!
-  \******************************************************/
+/***/ "./src/view/cellpainters/circularpainter.ts":
+/*!**************************************************!*\
+  !*** ./src/view/cellpainters/circularpainter.ts ***!
+  \**************************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "CircularCellPainter": () => (/* binding */ CircularCellPainter)
+/* harmony export */   "CircularPainter": () => (/* binding */ CircularPainter)
 /* harmony export */ });
-/* harmony import */ var _canvaspainter__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./canvaspainter */ "./src/view/cellpainters/canvaspainter.ts");
+/* harmony import */ var _cellpainter__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./cellpainter */ "./src/view/cellpainters/cellpainter.ts");
 
-class CircularCellPainter extends _canvaspainter__WEBPACK_IMPORTED_MODULE_0__.CanvasPainter {
+class CircularPainter extends _cellpainter__WEBPACK_IMPORTED_MODULE_0__.CellPainter {
+    constructor(canvas) {
+        super(canvas);
+    }
     plotCells(grid) {
-        this.paintCircles(grid.allLiveCells, this.black);
+        this.canvas.paintCircles(grid.allLiveCells, this.black);
     }
 }
 
 
 /***/ }),
 
-/***/ "./src/view/cellpainters/classiccellpainter.ts":
-/*!*****************************************************!*\
-  !*** ./src/view/cellpainters/classiccellpainter.ts ***!
-  \*****************************************************/
+/***/ "./src/view/cellpainters/classicpainter.ts":
+/*!*************************************************!*\
+  !*** ./src/view/cellpainters/classicpainter.ts ***!
+  \*************************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "ClassicCellPainter": () => (/* binding */ ClassicCellPainter)
+/* harmony export */   "ClassicPainter": () => (/* binding */ ClassicPainter)
 /* harmony export */ });
-/* harmony import */ var _canvaspainter__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./canvaspainter */ "./src/view/cellpainters/canvaspainter.ts");
+/* harmony import */ var _cellpainter__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./cellpainter */ "./src/view/cellpainters/cellpainter.ts");
 
-class ClassicCellPainter extends _canvaspainter__WEBPACK_IMPORTED_MODULE_0__.CanvasPainter {
+class ClassicPainter extends _cellpainter__WEBPACK_IMPORTED_MODULE_0__.CellPainter {
+    constructor(canvas) {
+        super(canvas);
+    }
     plotCells(grid) {
-        this.paintSquares(grid.allLiveCells, this.black);
+        this.canvas.paintSquares(grid.allLiveCells, this.black);
     }
 }
 
@@ -449,9 +625,12 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "MoleculePainter": () => (/* binding */ MoleculePainter)
 /* harmony export */ });
-/* harmony import */ var _canvaspainter__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./canvaspainter */ "./src/view/cellpainters/canvaspainter.ts");
+/* harmony import */ var _cellpainter__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./cellpainter */ "./src/view/cellpainters/cellpainter.ts");
 
-class MoleculePainter extends _canvaspainter__WEBPACK_IMPORTED_MODULE_0__.CanvasPainter {
+class MoleculePainter extends _cellpainter__WEBPACK_IMPORTED_MODULE_0__.CellPainter {
+    constructor(canvas) {
+        super(canvas);
+    }
     plotCells(grid) {
         const livingCells = grid.allLiveCells;
         //orthogonal connections
@@ -459,38 +638,38 @@ class MoleculePainter extends _canvaspainter__WEBPACK_IMPORTED_MODULE_0__.Canvas
             .forEach(cell => {
             cell.livingOrthogonalNeighbours
                 .forEach(neighbour => {
-                this.paintLineBetweenCells(cell, neighbour);
+                this.canvas.paintLineBetweenCells(cell, neighbour);
             });
         });
         this.cellsWithNoLivingOrthogonalNeihbours(livingCells)
             .forEach(cell => {
             cell.livingDiagonalNeighbours
                 .forEach(neighbour => {
-                this.paintLineBetweenCells(cell, neighbour);
+                this.canvas.paintLineBetweenCells(cell, neighbour);
             });
         });
         this.cellsWithOneLivingOrthogonalNeihbours(livingCells).forEach(cell => {
             cell.livingDiagonalNeighbours
                 .forEach(neighbour => {
                 if (this.cellsHaveNoCommonLivingOrthogonalNeighbours(cell, neighbour)) {
-                    this.paintLineBetweenCells(cell, neighbour);
+                    this.canvas.paintLineBetweenCells(cell, neighbour);
                 }
             });
         });
-        this.paintCellsAsHollowDots(livingCells, this.gray);
-        this.paintCellsAsHollowDots(this.cellsWithNoLivingNeighbours(livingCells), this.yellow);
-        this.paintCellsAsHollowDots(this.cellsWithOneLivingOrthogonalNeighbour(livingCells), this.green);
+        this.canvas.paintCellsAsHollowDots(livingCells, this.gray);
+        this.canvas.paintCellsAsHollowDots(this.cellsWithNoLivingNeighbours(livingCells), this.yellow);
+        this.canvas.paintCellsAsHollowDots(this.cellsWithOneLivingOrthogonalNeighbour(livingCells), this.green);
         this.cellsWithOneLivingOrthogonalNeihbours(livingCells).forEach(cell => {
             cell.livingDiagonalNeighbours
                 .forEach(neighbour => {
                 if (this.cellsHaveNoCommonLivingOrthogonalNeighbours(cell, neighbour)) {
-                    this.paintCellsAsHollowDots([cell, neighbour], this.gray);
+                    this.canvas.paintCellsAsHollowDots([cell, neighbour], this.gray);
                 }
             });
         });
-        this.paintCellsAsHollowDots(this.cellsWithOneLivingDiagonalNeighbour(livingCells), this.lightBlue);
-        this.paintCellsAsHollowDots(this.cellsWithTwoDiagonalNeighboursNotOnALine(livingCells), this.orange);
-        this.paintCellsAsHollowDots(this.cellsWithTwoOrthogonalNeighbousNotOnALine(livingCells), this.orange);
+        this.canvas.paintCellsAsHollowDots(this.cellsWithOneLivingDiagonalNeighbour(livingCells), this.lightBlue);
+        this.canvas.paintCellsAsHollowDots(this.cellsWithTwoDiagonalNeighboursNotOnALine(livingCells), this.orange);
+        this.canvas.paintCellsAsHollowDots(this.cellsWithTwoOrthogonalNeighbousNotOnALine(livingCells), this.orange);
     }
     cellsWithTwoOrthogonalNeighbousNotOnALine(cells) {
         return cells
@@ -555,12 +734,12 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "NeighboursCountPainter": () => (/* binding */ NeighboursCountPainter)
 /* harmony export */ });
-/* harmony import */ var _canvaspainter__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./canvaspainter */ "./src/view/cellpainters/canvaspainter.ts");
+/* harmony import */ var _cellpainter__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./cellpainter */ "./src/view/cellpainters/cellpainter.ts");
 
-class NeighboursCountPainter extends _canvaspainter__WEBPACK_IMPORTED_MODULE_0__.CanvasPainter {
+class NeighboursCountPainter extends _cellpainter__WEBPACK_IMPORTED_MODULE_0__.CellPainter {
     plotCells(grid) {
         grid.allLiveCells.forEach(cell => {
-            this.paintSquares([cell], this.colorGivenNumberOfNeighboursToOfCell(cell));
+            this.canvas.paintSquares([cell], this.colorGivenNumberOfNeighboursToOfCell(cell));
         });
     }
     colorGivenNumberOfNeighboursToOfCell(cell) {
@@ -592,21 +771,21 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   "RibbonPainter": () => (/* binding */ RibbonPainter)
 /* harmony export */ });
 /* harmony import */ var _model_cellconnection__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../model/cellconnection */ "./src/model/cellconnection.ts");
-/* harmony import */ var _canvaspainter__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./canvaspainter */ "./src/view/cellpainters/canvaspainter.ts");
+/* harmony import */ var _cellpainter__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./cellpainter */ "./src/view/cellpainters/cellpainter.ts");
 
 
-class RibbonPainter extends _canvaspainter__WEBPACK_IMPORTED_MODULE_1__.CanvasPainter {
+class RibbonPainter extends _cellpainter__WEBPACK_IMPORTED_MODULE_1__.CellPainter {
     plotCells(grid) {
-        grid.clusters.forEach(cluster => {
+        grid.clustersOfLiveCells.forEach(cluster => {
             const randomConnections = this.generateMazelikeRandomCellConnections(cluster);
             randomConnections.forEach(connection => {
-                this.paintLineBetweenCells(connection.cell1, connection.cell2, this.mediumLineWidth, this.gray, true);
-                this.paintLineBetweenCells(connection.cell1, connection.cell2, this.mediumLineWidth, this.green);
+                this.canvas.paintLineBetweenCells(connection.cell1, connection.cell2, this.canvas.mediumLineWidth, this.gray, true);
+                this.canvas.paintLineBetweenCells(connection.cell1, connection.cell2, this.canvas.mediumLineWidth, this.green);
             });
         });
         const lonleyCells = grid.allLiveCells.filter(cell => cell.livingNeighbours.length == 0);
-        this.paintCircles(lonleyCells, this.gray, this.mediumLineWidth, true);
-        this.paintCircles(lonleyCells, this.green, this.mediumLineWidth, false);
+        this.canvas.paintCircles(lonleyCells, this.gray, this.canvas.mediumLineWidth, true);
+        this.canvas.paintCircles(lonleyCells, this.green, this.canvas.mediumLineWidth, false);
     }
     generateMazelikeRandomCellConnections(cluster) {
         const cellConnections = [];
@@ -665,25 +844,55 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "SmoothCellPainter": () => (/* binding */ SmoothCellPainter)
 /* harmony export */ });
-/* harmony import */ var _canvaspainter__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./canvaspainter */ "./src/view/cellpainters/canvaspainter.ts");
+/* harmony import */ var _cellpainter__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./cellpainter */ "./src/view/cellpainters/cellpainter.ts");
 
-class SmoothCellPainter extends _canvaspainter__WEBPACK_IMPORTED_MODULE_0__.CanvasPainter {
+class SmoothCellPainter extends _cellpainter__WEBPACK_IMPORTED_MODULE_0__.CellPainter {
     plotCells(grid) {
         const livingCells = grid.allLiveCells;
         livingCells.forEach(livingCell => {
             livingCell.livingNeighbours
                 .forEach(livingNeighbourCell => {
-                this.paintLineBetweenCells(livingCell, livingNeighbourCell, this.wideLineWidth);
+                this.canvas.paintLineBetweenCells(livingCell, livingNeighbourCell, this.canvas.wideLineWidth);
             });
         });
         livingCells.forEach(livingCell => {
             livingCell.deadNeighbours
                 .filter(deadCell => deadCell.livingOrthogonalNeighbours.length >= 3)
                 .forEach(deadCell => {
-                this.paintCircles([deadCell], this.white);
+                this.canvas.paintCircles([deadCell], this.white);
             });
         });
-        this.paintCircles(livingCells, this.black);
+        this.canvas.paintCircles(livingCells, this.black);
+    }
+}
+
+
+/***/ }),
+
+/***/ "./src/view/cellpainters/squarecursorpainter.ts":
+/*!******************************************************!*\
+  !*** ./src/view/cellpainters/squarecursorpainter.ts ***!
+  \******************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "SquareCursorPainter": () => (/* binding */ SquareCursorPainter)
+/* harmony export */ });
+/* harmony import */ var _model_cell__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../model/cell */ "./src/model/cell.ts");
+
+class SquareCursorPainter {
+    constructor(canvas) {
+        this.transparentGreen = 'rgba(255,127,0,0.6)';
+        this.previousCell = new _model_cell__WEBPACK_IMPORTED_MODULE_0__.Cell(0, 0);
+        this.canvas = canvas;
+    }
+    clearThePreviousCellOnCanvas() {
+        this.canvas.clearSquare(this.previousCell);
+    }
+    colorCellOnMousePosition(cell) {
+        this.canvas.paintSquares([cell], this.transparentGreen);
+        this.previousCell = cell;
     }
 }
 
@@ -716,52 +925,6 @@ class Coordinate {
 
 /***/ }),
 
-/***/ "./src/view/foregroundpainter.ts":
-/*!***************************************!*\
-  !*** ./src/view/foregroundpainter.ts ***!
-  \***************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "ForegroundPainter": () => (/* binding */ ForegroundPainter)
-/* harmony export */ });
-/* harmony import */ var _model_cell__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../model/cell */ "./src/model/cell.ts");
-/* harmony import */ var _cellpainters_canvaspainter__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./cellpainters/canvaspainter */ "./src/view/cellpainters/canvaspainter.ts");
-
-
-class ForegroundPainter extends _cellpainters_canvaspainter__WEBPACK_IMPORTED_MODULE_1__.CanvasPainter {
-    constructor() {
-        super(...arguments);
-        this.foregroundCanvasElement = document.getElementById('foreground');
-        this.foregroundCanvasCtx = this.foregroundCanvasElement.getContext('2d');
-        this.transparentGreen = 'rgba(255,127,0,0.6)';
-        this.previousCell = new _model_cell__WEBPACK_IMPORTED_MODULE_0__.Cell(0, 0);
-    }
-    clearThePreviousCellOnCanvas() {
-        const position = this.upperLeftCornerOfCell(this.previousCell);
-        this.foregroundCanvasCtx.clearRect(position.x, position.y, this.gridCellWidth, this.gridCellWidth);
-    }
-    colorCellOnMousePosition(position) {
-        const cell = new _model_cell__WEBPACK_IMPORTED_MODULE_0__.Cell(Math.floor(position.x / this.gridCellWidth), Math.floor(position.y / this.gridCellWidth));
-        this.paintSquare(cell);
-        this.previousCell = cell;
-    }
-    paintSquare(cell) {
-        const padding = 1;
-        this.foregroundCanvasCtx.fillStyle = this.transparentGreen;
-        this.foregroundCanvasCtx.beginPath(); //varför måste jag ha med detta för att färgändring ska slå igenom
-        this.foregroundCanvasCtx.stroke(); // dito
-        const squareWidth = this.gridCellWidth - 2 * padding;
-        const corner = this.upperLeftCornerOfCell(cell);
-        this.foregroundCanvasCtx.rect(corner.x + padding, corner.y + padding, squareWidth, squareWidth);
-        this.foregroundCanvasCtx.fill();
-    }
-}
-
-
-/***/ }),
-
 /***/ "./src/view/view.ts":
 /*!**************************!*\
   !*** ./src/view/view.ts ***!
@@ -772,53 +935,47 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "View": () => (/* binding */ View)
 /* harmony export */ });
-/* harmony import */ var _foregroundpainter__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./foregroundpainter */ "./src/view/foregroundpainter.ts");
-/* harmony import */ var _cellpainters_smoothpainter__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./cellpainters/smoothpainter */ "./src/view/cellpainters/smoothpainter.ts");
+/* harmony import */ var _cellpainters_squarecursorpainter__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./cellpainters/squarecursorpainter */ "./src/view/cellpainters/squarecursorpainter.ts");
+/* harmony import */ var _cellpainters_cellpainterfactory__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./cellpainters/cellpainterfactory */ "./src/view/cellpainters/cellpainterfactory.ts");
+/* harmony import */ var _canvas_canvas__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./canvas/canvas */ "./src/view/canvas/canvas.ts");
+
 
 
 class View {
     constructor(grid) {
-        this._cellPainter = new _cellpainters_smoothpainter__WEBPACK_IMPORTED_MODULE_1__.SmoothCellPainter();
-        this._foregroundPainter = new _foregroundpainter__WEBPACK_IMPORTED_MODULE_0__.ForegroundPainter();
         this.delayedAdjustCanvas = this.debounce(() => this.adjustCanvas(), 500);
-        this._grid = grid;
+        this.grid = grid;
+        this.backgroundCanvas = new _canvas_canvas__WEBPACK_IMPORTED_MODULE_2__.Canvas('gridLayer', grid);
+        this.cellPainter = _cellpainters_cellpainterfactory__WEBPACK_IMPORTED_MODULE_1__.CellPainterFactory.getCellPainter('smooth', this.backgroundCanvas);
+        this.foregroundCanvas = new _canvas_canvas__WEBPACK_IMPORTED_MODULE_2__.Canvas('foreground', grid);
+        this.foregroundPainter = new _cellpainters_squarecursorpainter__WEBPACK_IMPORTED_MODULE_0__.SquareCursorPainter(this.foregroundCanvas);
     }
-    set cellPainter(cellPainter) {
-        cellPainter.gridCellWidth = this._cellWidth;
-        this._cellPainter = cellPainter;
-    }
-    get cellWidth() {
-        return this._cellWidth;
+    changePainter(cellPaintertype) {
+        this.cellPainter = _cellpainters_cellpainterfactory__WEBPACK_IMPORTED_MODULE_1__.CellPainterFactory.getCellPainter(cellPaintertype, this.backgroundCanvas);
     }
     redrawGrid() {
-        this._cellPainter.clearTheCanvas();
-        this._cellPainter.plotCells(this._grid);
+        this.cellPainter.clearTheCanvas();
+        this.cellPainter.plotCells(this.grid);
     }
     drawMouseCellPosition(position) {
-        this._foregroundPainter.colorCellOnMousePosition(position);
+        const cellAtMousePosition = this.getCellAtCoordinate(position);
+        this.foregroundPainter.colorCellOnMousePosition(cellAtMousePosition);
     }
     removePreviousMouseCellPosition() {
-        this._foregroundPainter.clearThePreviousCellOnCanvas();
+        this.foregroundPainter.clearThePreviousCellOnCanvas();
+    }
+    getCellAtCoordinate(coordinate) {
+        return this.foregroundCanvas.getCellAttCoordinate(coordinate);
     }
     adjustCanvas() {
-        const newCanvasWidth = window.innerWidth - 32;
-        const newCanvasHeight = window.innerHeight - 16;
-        const canvases = document.querySelectorAll('div#viewport canvas');
-        canvases.forEach((canvas) => {
-            canvas.width = newCanvasWidth;
-            canvas.height = newCanvasHeight;
-        });
-        const div = document.querySelector('div#viewport');
-        div.style.height = newCanvasHeight + 'px';
-        if (newCanvasWidth > newCanvasHeight) {
-            this._cellWidth = newCanvasWidth / this._grid.numberOfColumns;
-        }
-        else {
-            this._cellWidth = newCanvasHeight / this._grid.numberOfRows;
-        }
-        this._cellPainter.gridCellWidth = this._cellWidth;
-        this._foregroundPainter.gridCellWidth = this._cellWidth;
+        this.backgroundCanvas.updateCanvasWhenWindowChanges();
+        this.foregroundCanvas.updateCanvasWhenWindowChanges();
+        this.setTheHeightOfTheDiv(this.foregroundCanvas.height);
         this.redrawGrid();
+    }
+    setTheHeightOfTheDiv(newHeight) {
+        const theDivThatHoldsCanvases = document.querySelector('div#viewport');
+        theDivThatHoldsCanvases.style.height = newHeight + 'px';
     }
     debounce(func, wait) {
         let timeoutID;
@@ -901,8 +1058,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _style_css__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./style.css */ "./src/style.css");
 /* harmony import */ var _model_grid__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./model/grid */ "./src/model/grid.ts");
 /* harmony import */ var _view_view__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./view/view */ "./src/view/view.ts");
-/* harmony import */ var _view_cellpainters_cellpainterfactory__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./view/cellpainters/cellpainterfactory */ "./src/view/cellpainters/cellpainterfactory.ts");
-/* harmony import */ var _view_coordinate__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./view/coordinate */ "./src/view/coordinate.ts");
+/* harmony import */ var _view_coordinate__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./view/coordinate */ "./src/view/coordinate.ts");
+/* harmony import */ var _model_animator_service__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./model/animator.service */ "./src/model/animator.service.ts");
 
 
 
@@ -910,62 +1067,17 @@ __webpack_require__.r(__webpack_exports__);
 
 const grid = new _model_grid__WEBPACK_IMPORTED_MODULE_1__.Grid(60, 60);
 const view = new _view_view__WEBPACK_IMPORTED_MODULE_2__.View(grid);
+const animator = new _model_animator_service__WEBPACK_IMPORTED_MODULE_4__.AnimatorService(grid);
 let running = false;
 let handle;
-//Glider
-grid.cellAt(29, 1).live();
-grid.cellAt(29, 2).live();
-grid.cellAt(29, 3).live();
-grid.cellAt(28, 3).live();
-grid.cellAt(27, 2).live();
-//Penta-decathlon
-grid.cellAt(10, 10).live();
-grid.cellAt(10, 11).live();
-grid.cellAt(9, 12).live();
-grid.cellAt(11, 12).live();
-grid.cellAt(10, 13).live();
-grid.cellAt(10, 14).live();
-grid.cellAt(10, 15).live();
-grid.cellAt(10, 16).live();
-grid.cellAt(9, 17).live();
-grid.cellAt(11, 17).live();
-grid.cellAt(10, 18).live();
-grid.cellAt(10, 19).live();
-//Toad
-grid.cellAt(4, 3).live();
-grid.cellAt(5, 3).live();
-grid.cellAt(6, 3).live();
-grid.cellAt(5, 4).live();
-grid.cellAt(6, 4).live();
-grid.cellAt(7, 4).live();
-//light-weight spaceship
-grid.cellAt(12, 5).live();
-grid.cellAt(12, 7).live();
-grid.cellAt(13, 8).live();
-grid.cellAt(14, 8).live();
-grid.cellAt(15, 8).live();
-grid.cellAt(16, 8).live();
-grid.cellAt(16, 7).live();
-grid.cellAt(16, 6).live();
-grid.cellAt(15, 5).live();
-//corners
-grid.cellAt(0, 0).live();
-grid.cellAt(59, 59).live();
-//xxx
-grid.cellAt(30, 27).live();
-grid.cellAt(30, 28).live();
-grid.cellAt(30, 29).live();
-grid.cellAt(31, 26).live();
-grid.cellAt(32, 26).live();
-grid.cellAt(33, 27).live();
-grid.cellAt(32, 28).live();
-//Z-hexomino
-grid.cellAt(10, 27).live();
-grid.cellAt(11, 27).live();
-grid.cellAt(11, 28).live();
-grid.cellAt(11, 29).live();
-grid.cellAt(11, 30).live();
-grid.cellAt(12, 30).live();
+animator.createPattern('glider', 35, 14);
+animator.createPattern('zHexomino', 12, 27);
+animator.createPattern('lightweightSpaceship', 12, 42);
+animator.createPattern('pentaDecathlon', 13, 16);
+animator.createPattern('toad', 45, 17);
+animator.createCorners();
+animator.createPattern('ship', 43, 35);
+animator.createPattern('oscillatingPulsar', 23, 23);
 function toggleRunning() {
     if (running) {
         running = false;
@@ -977,23 +1089,27 @@ function toggleRunning() {
     }
 }
 function takeAStep() {
-    grid.evolve();
+    evolveAllCellsInGrid();
     view.redrawGrid();
 }
-function changeCellPainter(cellPaintertype) {
-    view.cellPainter = _view_cellpainters_cellpainterfactory__WEBPACK_IMPORTED_MODULE_3__.CellPainterFactory.getCellPainter(cellPaintertype);
+function evolveAllCellsInGrid() {
+    grid.allCells.forEach(cell => cell.planFate());
+    grid.allCells.forEach(cell => cell.executeFate());
+}
+function changePainter(cellPaintertype) {
+    view.changePainter(cellPaintertype);
     view.redrawGrid();
 }
 function canvasLeftClicked(event, canvasId) {
     const coordinate = getMouseCoordinate(event, canvasId);
-    grid.cellAt(Math.floor(coordinate.x / view.cellWidth), Math.floor(coordinate.y / view.cellWidth)).toggleLifeDeath();
+    view.getCellAtCoordinate(coordinate).toggleLifeDeath();
     view.redrawGrid();
 }
 function getMouseCoordinate(event, elementId) {
     const rect = document.getElementById(elementId).getBoundingClientRect();
     const x = event.clientX - rect.left;
     const y = event.clientY - rect.top;
-    return new _view_coordinate__WEBPACK_IMPORTED_MODULE_4__.Coordinate(x, y);
+    return new _view_coordinate__WEBPACK_IMPORTED_MODULE_3__.Coordinate(x, y);
 }
 function canvasMouseMovement(event, canvasId) {
     const mousePosition = getMouseCoordinate(event, canvasId);
@@ -1006,12 +1122,15 @@ function canvasMouseOut() {
 function killAll() {
     const reallyKillAll = confirm('Do you want to kill every cell?');
     if (reallyKillAll) {
-        grid.killAll();
+        killAllCellsInGrid();
         view.redrawGrid();
     }
 }
+function killAllCellsInGrid() {
+    grid.allCells.forEach(cell => cell.die());
+}
 function keyPressed(event) {
-    switch (event.key) {
+    switch (event.key.toLowerCase()) {
         case 'w':
             toggleRunning();
             break;
@@ -1019,45 +1138,45 @@ function keyPressed(event) {
             takeAStep();
             break;
         case 'r':
-            changeCellPainter('ribbon');
+            changePainter('ribbon');
             break;
         case 'a':
-            changeCellPainter('age');
+            changePainter('age');
             break;
         case 's':
-            changeCellPainter('smooth');
+            changePainter('smooth');
             break;
         case 'd':
-            changeCellPainter('circular');
+            changePainter('circular');
             break;
         case 'f':
-            changeCellPainter('molecule');
+            changePainter('molecule');
             break;
         case 'x':
             killAll();
             break;
         case 'c':
-            changeCellPainter('classic');
+            changePainter('classic');
             break;
         case 'v':
-            changeCellPainter('neighbours');
+            changePainter('neighbours');
             break;
     }
 }
 document.getElementById('stepButton').addEventListener('click', () => takeAStep());
-document.getElementById('classicButton').addEventListener('click', () => changeCellPainter('classic'));
-document.getElementById('circularButton').addEventListener('click', () => changeCellPainter('circular'));
-document.getElementById('smoothButton').addEventListener('click', () => changeCellPainter('smooth'));
-document.getElementById('cellAgeButton').addEventListener('click', () => changeCellPainter('age'));
-document.getElementById('neigbourcountButton').addEventListener('click', () => changeCellPainter('neighbours'));
-document.getElementById('ribbonButton').addEventListener('click', () => changeCellPainter('ribbon'));
-document.getElementById('moleculeButton').addEventListener('click', () => changeCellPainter('molecule'));
+document.getElementById('classicButton').addEventListener('click', () => changePainter('classic'));
+document.getElementById('circularButton').addEventListener('click', () => changePainter('circular'));
+document.getElementById('smoothButton').addEventListener('click', () => changePainter('smooth'));
+document.getElementById('cellAgeButton').addEventListener('click', () => changePainter('age'));
+document.getElementById('neigbourcountButton').addEventListener('click', () => changePainter('neighbours'));
+document.getElementById('ribbonButton').addEventListener('click', () => changePainter('ribbon'));
+document.getElementById('moleculeButton').addEventListener('click', () => changePainter('molecule'));
 document.getElementById('startStopButton').addEventListener('click', () => toggleRunning());
 document.getElementById('killAllButton').addEventListener('click', () => killAll());
 const foreground = document.getElementById('foreground');
 foreground.addEventListener('click', (event) => canvasLeftClicked(event, event.target.id));
 foreground.addEventListener('mousemove', (event) => canvasMouseMovement(event, event.target.id));
-foreground.addEventListener('mouseout', (event) => canvasMouseOut());
+foreground.addEventListener('mouseout', () => canvasMouseOut());
 document.addEventListener('keydown', (event) => keyPressed(event));
 addEventListener('load', () => view.adjustCanvas());
 addEventListener('resize', () => view.delayedAdjustCanvas());
